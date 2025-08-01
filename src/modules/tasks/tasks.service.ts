@@ -9,12 +9,14 @@ export class TasksService {
   private readonly tasks: Task[] = [];
   async create(createTaskDto: CreateTaskDto) {
     const { title, description } = createTaskDto;
+    const createTaskId = uuidv4();
     const newTask = {
-      id: uuidv4(),
+      id: createTaskId,
       title,
       description,
     };
     this.tasks.push(newTask);
+    return createTaskId;
   }
 
   findAll() {
