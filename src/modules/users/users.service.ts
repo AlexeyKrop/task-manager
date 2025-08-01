@@ -23,8 +23,8 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
     const { username, password, email } = createUserDto;
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
+    const passwordSalt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, passwordSalt);
 
     const user: User = {
       userId: uuidv4(),
