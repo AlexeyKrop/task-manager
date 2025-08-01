@@ -7,7 +7,7 @@ import { Task } from './entities';
 @Injectable()
 export class TasksService {
   private readonly tasks: Task[] = [];
-  async create(createTaskDto: CreateTaskDto) {
+  async create(createTaskDto: CreateTaskDto): Promise<string> {
     const { title, description } = createTaskDto;
     const createTaskId = uuidv4();
     const newTask = {
@@ -19,8 +19,8 @@ export class TasksService {
     return createTaskId;
   }
 
-  findAll() {
-    return `This action returns all tasks`;
+  async findAll(): Promise<Task[]> {
+    return this.tasks;
   }
 
   findOne(id: number) {
