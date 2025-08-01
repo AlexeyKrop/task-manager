@@ -29,11 +29,20 @@ export class TasksService {
     return foundTask;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    const { title, description } = updateTaskDto;
+    const task = await this.tasks.find((item) => item.id === id);
+    if (!task) throw new NotFoundException(`Task ${id} not found`);
+
+    if (title !== undefined) task.title = title;
+    if (description !== undefined) task.description = description;
+
+    return task;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  async remove(id: string): Promise<void> {
+    const i = this.tasks.findIndex((item) => item.id === id);
+    if (i === -1) throw new NotFoundException(`Task ${id} not found`);
+    this.tasks.splice(i, 1);
   }
 }
