@@ -6,20 +6,7 @@ import { CreateUserDto } from './dto';
 
 @Injectable()
 export class UsersService {
-  private readonly users = [
-    {
-      userId: '1',
-      username: 'john',
-      password: bcrypt.hashSync('changeme', 10),
-      email: '0@gmail.com',
-    },
-    {
-      userId: '2',
-      username: 'maria',
-      password: bcrypt.hashSync('guess', 10),
-      email: '00@gmail.com',
-    },
-  ];
+  private readonly users: User[] = [];
 
   async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
     const { username, password, email } = createUserDto;
