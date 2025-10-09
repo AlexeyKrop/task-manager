@@ -55,6 +55,10 @@ async function bootstrap() {
     `);
   });
 
+  httpAdapter.get('/api-docs', (req, res) => {
+    res.json(document);
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
