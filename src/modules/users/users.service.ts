@@ -1,31 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
+import { UsersRepository } from './repositories';
+import { User } from './domain';
 import * as bcrypt from 'bcrypt';
-import { User } from './entities';
-import { CreateUserDto } from './dto';
 
 @Injectable()
 export class UsersService {
-  private readonly users: User[] = [];
+  constructor(private readonly usersRepository: UsersRepository) {}
 
-  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
-    const { username, password, email } = createUserDto;
-    const passwordSalt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, passwordSalt);
+  async create({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }): Promise<User> {
+    const existingUser = await this.usersRepository.findByEmail(email);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
 
-    const user: User = {
-      userId: uuidv4(),
-      username,
-      email,
-      password: hash,
-    };
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    this.users.push(user);
-    const { password: _, ...result } = user;
-    return result;
+    return this.usersRepository.create(email, passwordHash);
   }
 
-  async findOne(email: string): Promise<User | undefined> {
-    return this.users.find((user) => user.email === email);
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findByEmail(email);
   }
 }
