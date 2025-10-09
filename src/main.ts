@@ -48,7 +48,7 @@ async function bootstrap() {
         <body>
           <script
             id="api-reference"
-            data-url="/api-json"></script>
+            data-url="/api-docs"></script>
           <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
         </body>
       </html>
