@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from '../../common';
 import { UsersService } from '../users';
-import { AuthResponseDto, SignUpDto } from './dto';
+import { SignUpResponseDto, SignUpDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +28,7 @@ export class AuthService {
   //   return this.generateTokens(user.id, user.email);
   // }
 
-  async signUp(signUpDto: SignUpDto): Promise<AuthResponseDto> {
+  async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
     const existingUser = await this.usersService.findByEmail(signUpDto.email);
 
     if (existingUser) {
@@ -70,7 +70,7 @@ export class AuthService {
   private async generateTokens(
     userId: string,
     email: string,
-  ): Promise<AuthResponseDto> {
+  ): Promise<SignUpResponseDto> {
     const payload = { sub: userId, email };
 
     const [accessToken, refreshToken] = await Promise.all([
