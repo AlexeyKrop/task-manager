@@ -21,6 +21,9 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, {
+    customSiteTitle: 'Task Manager API',
+  });
 
   app.use(
     '/api-docs',
@@ -30,6 +33,27 @@ async function bootstrap() {
       },
     }),
   );
+
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/api-docs', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>API Reference</title>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </head>
+        <body>
+          <script
+            id="api-reference"
+            data-url="/api-json"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+        </body>
+      </html>
+    `);
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
