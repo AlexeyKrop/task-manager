@@ -17,11 +17,8 @@ async function bootstrap() {
       origin: '*',
       credentials: true,
     });
+    console.log('CORS: Development mode - all origins allowed');
   } else {
-    const allowedOrigins =
-      process.env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()) ||
-      [];
-
     app.enableCors({
       origin: (origin, callback) => {
         if (!origin) {
@@ -31,6 +28,7 @@ async function bootstrap() {
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
+          console.warn(`CORS blocked: ${origin}`);
           callback(new Error('Not allowed by CORS'));
         }
       },
@@ -38,32 +36,38 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
     });
+    console.log(
+      `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
+    );
   }
 
-  // app.enableCors({
-  //   origin: (origin, callback) => {
-  //     if (!origin && isDevelopment) {
-  //       return callback(null, true);
-  //     }
+  // if (isDevelopment) {
+  //   app.enableCors({
+  //     origin: '*',
+  //     credentials: true,
+  //   });
+  // } else {
+  //   const allowedOrigins =
+  //     process.env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()) ||
+  //     [];
 
-  //     if (!origin && !isDevelopment) {
-  //       return callback(new Error('Origin header is required'));
-  //     }
+  //   app.enableCors({
+  //     origin: (origin, callback) => {
+  //       if (!origin) {
+  //         return callback(null, true);
+  //       }
 
-  //     if (allowedOrigins.includes(origin)) {
-  //       callback(null, true);
-  //     } else {
-  //       callback(new Error(`Origin ${origin} not allowed by CORS`));
-  //     }
-  //   },
-  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  //   allowedHeaders: ['Content-Type', 'Authorization'],
-  //   credentials: true,
-  // });
-  app.enableCors({
-    origin: '*',
-    credentials: true,
-  });
+  //       if (allowedOrigins.includes(origin)) {
+  //         callback(null, true);
+  //       } else {
+  //         callback(new Error('Not allowed by CORS'));
+  //       }
+  //     },
+  //     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //     allowedHeaders: ['Content-Type', 'Authorization'],
+  //     credentials: true,
+  //   });
+  // }
 
   const config = new DocumentBuilder()
     .setTitle('Task Manager API')
