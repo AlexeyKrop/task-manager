@@ -12,24 +12,28 @@ async function bootstrap() {
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
+  // app.enableCors({
+  //   origin: (origin, callback) => {
+  //     if (!origin && isDevelopment) {
+  //       return callback(null, true);
+  //     }
+
+  //     if (!origin && !isDevelopment) {
+  //       return callback(new Error('Origin header is required'));
+  //     }
+
+  //     if (allowedOrigins.includes(origin)) {
+  //       callback(null, true);
+  //     } else {
+  //       callback(new Error(`Origin ${origin} not allowed by CORS`));
+  //     }
+  //   },
+  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //   allowedHeaders: ['Content-Type', 'Authorization'],
+  //   credentials: true,
+  // });
   app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin && isDevelopment) {
-        return callback(null, true);
-      }
-
-      if (!origin && !isDevelopment) {
-        return callback(new Error('Origin header is required'));
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`Origin ${origin} not allowed by CORS`));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: '*',
     credentials: true,
   });
 
