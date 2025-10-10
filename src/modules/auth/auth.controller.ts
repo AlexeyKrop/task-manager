@@ -9,16 +9,25 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RefreshTokenDto, SignInDto, SignUpDto } from './dto';
+import {
+  SignInDto,
+  SignInResponseDto,
+  SignUpDto,
+  SignUpResponseDto,
+} from './dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
   @Post('signUp')
-  signUp(@Body() signUpDto: SignUpDto) {
+  signUp(@Body() signUpDto: SignUpDto): Promise<SignUpResponseDto> {
     return this.authService.signUp(signUpDto);
+  }
+
+  @Post('signIn')
+  signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
+    return this.authService.signIn(signInDto);
   }
 
   // @Post('refresh')
