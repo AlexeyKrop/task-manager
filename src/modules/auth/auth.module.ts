@@ -25,9 +25,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         const secret = configService.get<string>('JWT_SECRET');
         const expiresIn = configService.get<string>('JWT_EXPIRES_IN');
 
+        console.log('🔧 JWT Module Configuration:');
+        console.log(`JWT_SECRET exists: ${!!secret}`);
+        console.log(`JWT_SECRET length: ${secret?.length || 0}`);
+        console.log(`JWT_EXPIRES_IN: ${expiresIn}`);
+
         if (!secret) {
+          console.error('❌ JWT_SECRET is not configured');
           throw new Error('JWT_SECRET is not configured');
         }
+
+        if (secret.length < 32) {
+          console.warn('⚠️ JWT_SECRET is too short (recommended: 32+ characters)');
+        }
+
+        console.log('✅ JWT Module configured successfully');
 
         return {
           secret,

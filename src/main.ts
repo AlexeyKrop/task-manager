@@ -11,6 +11,25 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  // Check critical environment variables
+  console.log('🔍 Checking environment variables...');
+  const requiredEnvVars = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'JWT_REFRESH_SECRET',
+    'JWT_EXPIRES_IN',
+    'JWT_REFRESH_EXPIRES_IN',
+  ];
+
+  for (const envVar of requiredEnvVars) {
+    const value = configService.get<string>(envVar);
+    console.log(`${envVar}: ${value ? '✅ Set' : '❌ Missing'} (length: ${value?.length || 0})`);
+
+    if (!value && envVar.includes('JWT')) {
+      console.error(`❌ CRITICAL: ${envVar} is required but not set!`);
+    }
+  }
+
   const isDevelopment = configService.get<string>('NODE_ENV') !== 'production';
   const allowedOrigins = configService
     .get<string>('ALLOWED_ORIGINS')
