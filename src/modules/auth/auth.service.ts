@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../../common';
+import { getJwtConstants } from '../../common';
 import { UsersService } from '../users';
 import {
   SignUpResponseDto,
@@ -38,7 +38,7 @@ export class AuthService {
 
     const user = await this.usersService.create({
       email: email,
-      password: hashedPassword,
+      passwordHash: hashedPassword,
     });
 
     return this.generateTokens(user.id, user.email);
@@ -68,7 +68,7 @@ export class AuthService {
     let payload;
     try {
       payload = await this.jwtService.verifyAsync(refresh_token, {
-        secret: jwtConstants.refresh.secret,
+        secret: getJwtConstants().refresh.secret,
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -100,13 +100,13 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
-        secret: jwtConstants.refresh.secret,
-        expiresIn: jwtConstants.refresh.expiresIn,
+        secret: getJwtConstants().refresh.secret,
+        expiresIn: getJwtConstants().refresh.expiresIn,
       }),
     ]);
 
     const expiresAt = new Date();
-    const daysMatch = jwtConstants.refresh.expiresIn.match(/(\d+)d/);
+    const daysMatch = getJwtConstants().refresh.expiresIn.match(/(\d+)d/);
     if (daysMatch) {
       expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
     }

@@ -12,34 +12,35 @@ async function bootstrap() {
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  if (isDevelopment) {
-    app.enableCors({
-      origin: '*',
-      credentials: true,
-    });
-    console.log('CORS: Development mode - all origins allowed');
-  } else {
-    app.enableCors({
-      origin: (origin, callback) => {
-        if (!origin) {
-          return callback(null, true);
-        }
+  // if (isDevelopment) {
+  //   app.enableCors({
+  //     origin: '*',
+  //     credentials: true,
+  //   });
+  //   console.log('CORS: Development mode - all origins allowed');
+  // } else {
+  //   app.enableCors({
+  //     origin: (origin, callback) => {
+  //       if (!origin) {
+  //         return callback(null, true);
+  //       }
 
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.warn(`CORS blocked: ${origin}`);
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true,
-    });
-    console.log(
-      `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
-    );
-  }
+  //       if (allowedOrigins.includes(origin)) {
+  //         callback(null, true);
+  //       } else {
+  //         console.warn(`CORS blocked: ${origin}`);
+  //         callback(new Error('Not allowed by CORS'));
+  //       }
+  //     },
+  //     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //     allowedHeaders: ['Content-Type', 'Authorization'],
+  //     credentials: true,
+  //   });
+  //   console.log(
+  //     `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
+  //   );
+  // }
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Task Manager API')
