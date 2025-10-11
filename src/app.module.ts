@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { PrismaModule } from './common';
-import { AuthModule } from './modules';
+import { AuthModule, UsersModule } from './modules';
 
 @Module({
   imports: [
@@ -12,6 +12,7 @@ import { AuthModule } from './modules';
       cache: true,
     }),
     AuthModule,
+    UsersModule,
     PrismaModule,
   ],
 })

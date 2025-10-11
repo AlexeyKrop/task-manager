@@ -1,17 +1,20 @@
 import { Controller, Get, NotFoundException, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../common';
 import { UsersService } from './users.service';
 import { CurrentUser } from './decorators';
-import { UserMapper } from './mappers';
+import { UserProfileResponseDto } from './dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async getProfile(@CurrentUser() userId: string) {
-    const user = await this.usersService.findById(userId);
-    return UserMapper.toResponse(user);
+  async getProfile(
+    @CurrentUser() userId: string,
+  ): Promise<UserProfileResponseDto> {
+    return this.usersService.getProfile(userId);
   }
 }

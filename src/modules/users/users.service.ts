@@ -2,11 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { UsersRepository } from './repositories';
 import { User } from './domain';
-import * as bcrypt from 'bcrypt';
+import { UserMapper } from './mappers';
+import { UserProfileResponseDto } from './dto';
 
 @Injectable()
 export class UsersService {
@@ -33,7 +34,7 @@ export class UsersService {
     return this.usersRepository.findByEmail(email);
   }
 
-  async findById(id: string): Promise<User> {
+  private async findById(id: string): Promise<User> {
     const user = await this.usersRepository.findById(id);
 
     if (!user) {
@@ -41,5 +42,10 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async getProfile(id: string): Promise<UserProfileResponseDto> {
+    const user = await this.findById(id);
+    return UserMapper.toResponse(user);
   }
 }

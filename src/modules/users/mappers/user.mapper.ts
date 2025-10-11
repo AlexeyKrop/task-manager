@@ -1,5 +1,6 @@
 import { User as PrismaUser } from '@prisma/client';
 import { User } from '../domain';
+import { UserProfileResponseDto } from '../dto';
 
 export class UserMapper {
   static toDomain(prismaUser: PrismaUser): User {
@@ -16,7 +17,7 @@ export class UserMapper {
     return prismaUsers.map((user) => this.toDomain(user));
   }
 
-  static toResponse(user: User) {
+  static toResponse(user: User): UserProfileResponseDto {
     return {
       id: user.id,
       email: user.email,
