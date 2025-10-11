@@ -9,7 +9,6 @@ export class RefreshTokenMapper {
       prismaToken.userId,
       prismaToken.expiresAt,
       prismaToken.createdAt,
-      prismaToken.isRevoked,
     );
   }
 

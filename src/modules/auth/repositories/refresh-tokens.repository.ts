@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../common/prisma/prisma.service'; // или откуда у тебя PrismaService
+import { PrismaService } from '../../../common';
 import { RefreshToken } from '../domain';
 import { RefreshTokenMapper } from '../mappers';
 
@@ -7,16 +7,16 @@ import { RefreshTokenMapper } from '../mappers';
 export class RefreshTokensRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    token: string,
-    userId: string,
-    expiresAt: Date,
-  ): Promise<RefreshToken> {
+  async create(data: {
+    token: string;
+    userId: string;
+    expiresAt: Date;
+  }): Promise<RefreshToken> {
     const prismaToken = await this.prisma.refreshToken.create({
       data: {
-        token,
-        userId,
-        expiresAt,
+        token: data.token,
+        userId: data.userId,
+        expiresAt: data.expiresAt,
       },
     });
 
@@ -31,24 +31,18 @@ export class RefreshTokensRepository {
     return prismaToken ? RefreshTokenMapper.toDomain(prismaToken) : null;
   }
 
-  async revoke(tokenId: string): Promise<void> {
-    await this.prisma.refreshToken.update({
-      where: { id: tokenId },
-      data: { isRevoked: true },
+  async findAllByUserId(userId: string): Promise<RefreshToken[]> {
+    const prismaTokens = await this.prisma.refreshToken.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
+
+    return RefreshTokenMapper.toDomains(prismaTokens);
   }
 
-  async revokeByToken(token: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
-      where: { token },
-      data: { isRevoked: true },
-    });
-  }
-
-  async revokeAllUserTokens(userId: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
-      where: { userId, isRevoked: false },
-      data: { isRevoked: true },
+  async deleteAllByUserId(userId: string): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({
+      where: { userId },
     });
   }
 
@@ -59,6 +53,19 @@ export class RefreshTokensRepository {
           lt: new Date(),
         },
       },
+    });
+  }
+
+  async deleteByToken(token: string): Promise<void> {
+    await this.prisma.refreshToken.delete({
+      where: { token },
+    });
+  }
+
+  async revoke(tokenId: string): Promise<void> {
+    await this.prisma.refreshToken.update({
+      where: { id: tokenId },
+      data: { isRevoked: true },
     });
   }
 }

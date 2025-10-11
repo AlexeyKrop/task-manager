@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
+  RefreshTokenDto,
+  RefreshTokenResponseDto,
   SignInDto,
   SignInResponseDto,
   SignUpDto,
@@ -30,15 +32,10 @@ export class AuthController {
     return this.authService.signIn(signInDto);
   }
 
-  // @Post('refresh')
-  // @HttpCode(HttpStatus.OK)
-  // refresh(@Body() dto: RefreshTokenDto) {
-  //   return this.authService.refresh(dto.refresh_token);
-  // }
-
-  // @UseGuards(AuthGuard)
-  // @Get('profile')
-  // getProfile(@Request() req) {
-  //   return req.user;
-  // }
+  @Post('refresh')
+  refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<RefreshTokenResponseDto> {
+    return this.authService.refresh(refreshTokenDto);
+  }
 }

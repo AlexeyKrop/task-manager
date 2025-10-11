@@ -12,13 +12,17 @@ import {
   SignUpDto,
   SignInResponseDto,
   SignInDto,
+  RefreshTokenDto,
+  RefreshTokenResponseDto,
 } from './dto';
+import { RefreshTokensRepository } from './repositories';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
@@ -57,6 +61,36 @@ export class AuthService {
     return this.generateTokens(user.id, user.email);
   }
 
+  async refresh(
+    refreshTokenDto: RefreshTokenDto,
+  ): Promise<RefreshTokenResponseDto> {
+    const { refresh_token } = refreshTokenDto;
+    let payload;
+    try {
+      payload = await this.jwtService.verifyAsync(refresh_token, {
+        secret: jwtConstants.refresh.secret,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const tokenInDb =
+      await this.refreshTokensRepository.findByToken(refresh_token);
+
+    if (!tokenInDb) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    if (tokenInDb.isExpired()) {
+      await this.refreshTokensRepository.deleteByToken(refresh_token);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    await this.refreshTokensRepository.deleteByToken(refresh_token);
+
+    return this.generateTokens(payload.sub, payload.email);
+  }
+
   private async generateTokens(
     userId: string,
     email: string,
@@ -70,6 +104,18 @@ export class AuthService {
         expiresIn: jwtConstants.refresh.expiresIn,
       }),
     ]);
+
+    const expiresAt = new Date();
+    const daysMatch = jwtConstants.refresh.expiresIn.match(/(\d+)d/);
+    if (daysMatch) {
+      expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
+    }
+
+    await this.refreshTokensRepository.create({
+      token: refreshToken,
+      userId,
+      expiresAt,
+    });
 
     return {
       access_token: accessToken,

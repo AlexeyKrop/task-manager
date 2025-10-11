@@ -5,15 +5,10 @@ export class RefreshToken {
     public readonly userId: string,
     public readonly expiresAt: Date,
     public readonly createdAt: Date,
-    public readonly isRevoked: boolean = false,
   ) {}
 
   isExpired(): boolean {
     return this.expiresAt < new Date();
-  }
-
-  isValid(): boolean {
-    return !this.isRevoked && !this.isExpired();
   }
 
   toJSON() {
@@ -23,7 +18,6 @@ export class RefreshToken {
       userId: this.userId,
       expiresAt: this.expiresAt,
       createdAt: this.createdAt,
-      isRevoked: this.isRevoked,
     };
   }
 }
