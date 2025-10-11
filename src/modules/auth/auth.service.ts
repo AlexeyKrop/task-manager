@@ -144,8 +144,11 @@ export class AuthService {
       );
 
       this.logger.log(`JWT_SECRET exists: ${!!jwtSecret}`);
+      this.logger.log(`JWT_SECRET length: ${jwtSecret?.length || 0}`);
       this.logger.log(`JWT_REFRESH_SECRET exists: ${!!refreshSecret}`);
-      this.logger.log(`JWT_REFRESH_EXPIRES_IN: ${refreshExpiresIn}`);
+      this.logger.log(`JWT_REFRESH_SECRET length: ${refreshSecret?.length || 0}`);
+      this.logger.log(`JWT_REFRESH_EXPIRES_IN: "${refreshExpiresIn}"`);
+      this.logger.log(`JWT_REFRESH_EXPIRES_IN type: ${typeof refreshExpiresIn}`);
 
       if (!jwtSecret) {
         this.logger.error('JWT_SECRET is not configured');
