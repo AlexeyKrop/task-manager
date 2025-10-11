@@ -12,35 +12,38 @@ async function bootstrap() {
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  // if (isDevelopment) {
-  //   app.enableCors({
-  //     origin: '*',
-  //     credentials: true,
-  //   });
-  //   console.log('CORS: Development mode - all origins allowed');
-  // } else {
-  //   app.enableCors({
-  //     origin: (origin, callback) => {
-  //       if (!origin) {
-  //         return callback(null, true);
-  //       }
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('isDevelopment:', isDevelopment);
+  console.log('Allowed origins:', allowedOrigins);
 
-  //       if (allowedOrigins.includes(origin)) {
-  //         callback(null, true);
-  //       } else {
-  //         console.warn(`CORS blocked: ${origin}`);
-  //         callback(new Error('Not allowed by CORS'));
-  //       }
-  //     },
-  //     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  //     allowedHeaders: ['Content-Type', 'Authorization'],
-  //     credentials: true,
-  //   });
-  //   console.log(
-  //     `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
-  //   );
-  // }
-  app.enableCors();
+  if (isDevelopment) {
+    app.enableCors({
+      origin: true,
+      credentials: true,
+    });
+    console.log('CORS: Development mode - all origins allowed');
+  } else {
+    app.enableCors({
+      origin: (origin, callback) => {
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    });
+    console.log(
+      `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
+    );
+  }
 
   const config = new DocumentBuilder()
     .setTitle('Task Manager API')
