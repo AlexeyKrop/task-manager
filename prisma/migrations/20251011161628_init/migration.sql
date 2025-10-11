@@ -2,10 +2,13 @@
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "name" TEXT,
+    "avatar_url" TEXT,
+    "bio" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "email_verified" BOOLEAN NOT NULL DEFAULT false,
+    "password_hash" TEXT NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -17,7 +20,6 @@ CREATE TABLE "refresh_tokens" (
     "userId" TEXT NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "isRevoked" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
 );
