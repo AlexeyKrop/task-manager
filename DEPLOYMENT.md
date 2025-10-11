@@ -13,7 +13,7 @@
 
 ```bash
 # Database
-DATABASE_URL="postgresql://username:password@hostname:5432/database_name?schema=public"
+DATABASE_URL="postgresql://username:password@hostname:5432/database_name?schema=public&connection_limit=1&pool_timeout=20"
 
 # JWT Configuration (ОБЯЗАТЕЛЬНО!)
 JWT_SECRET="your-super-secret-jwt-key-here-minimum-32-characters"
