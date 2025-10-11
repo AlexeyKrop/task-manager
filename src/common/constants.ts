@@ -3,7 +3,7 @@ export const getJwtConstants = () => {
   const refreshSecret =
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 
-  if (!accessSecret) {
+  if (!accessSecret || !refreshSecret) {
     throw new Error('JWT_SECRET is not configured');
   }
 
