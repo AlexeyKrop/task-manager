@@ -5,14 +5,36 @@ import { getJwtConstants } from '../../common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RefreshTokensRepository } from './repositories';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
+  // imports: [
+  //   UsersModule,
+  //   JwtModule.register({
+  //     global: true,
+  //     secret: getJwtConstants().access.secret,
+  //     signOptions: { expiresIn: getJwtConstants().access.expiresIn },
+  //   }),
+  // ],
   imports: [
     UsersModule,
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: getJwtConstants().access.secret,
-      signOptions: { expiresIn: getJwtConstants().access.expiresIn },
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        const expiresIn = configService.get<string>('JWT_EXPIRES_IN');
+
+        if (!secret) {
+          throw new Error('JWT_SECRET is not configured');
+        }
+
+        return {
+          secret,
+          signOptions: { expiresIn },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
