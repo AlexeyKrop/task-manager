@@ -15,34 +15,43 @@ async function bootstrap() {
     .get<string>('ALLOWED_ORIGINS')
     ?.split(',') || ['http://localhost:5173'];
 
-  if (isDevelopment) {
-    app.enableCors({
-      origin: true,
-      credentials: true,
-    });
-    console.log('CORS: Development mode - all origins allowed');
-  } else {
-    app.enableCors({
-      origin: (origin, callback) => {
-        if (!origin) {
-          return callback(null, true);
-        }
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log('Origin:', req.headers.origin || 'no origin (same-origin)');
+    console.log('User-Agent:', req.headers['user-agent']);
+    next();
+  });
 
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.warn(`CORS blocked: ${origin}`);
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true,
-    });
-    console.log(
-      `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
-    );
-  }
+  app.enableCors();
+
+  // if (isDevelopment) {
+  //   app.enableCors({
+  //     origin: true,
+  //     credentials: true,
+  //   });
+  //   console.log('CORS: Development mode - all origins allowed');
+  // } else {
+  //   app.enableCors({
+  //     origin: (origin, callback) => {
+  //       if (!origin) {
+  //         return callback(null, true);
+  //       }
+
+  //       if (allowedOrigins.includes(origin)) {
+  //         callback(null, true);
+  //       } else {
+  //         console.warn(`CORS blocked: ${origin}`);
+  //         callback(new Error('Not allowed by CORS'));
+  //       }
+  //     },
+  //     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  //     allowedHeaders: ['Content-Type', 'Authorization'],
+  //     credentials: true,
+  //   });
+  //   console.log(
+  //     `CORS: Production mode - allowed origins: ${allowedOrigins.join(', ')}`,
+  //   );
+  // }
 
   const config = new DocumentBuilder()
     .setTitle('Task Manager API')
