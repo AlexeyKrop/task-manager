@@ -61,11 +61,4 @@ export class RefreshTokensRepository {
       where: { token },
     });
   }
-
-  async revoke(tokenId: string): Promise<void> {
-    await this.prisma.refreshToken.update({
-      where: { id: tokenId },
-      data: { isRevoked: true },
-    });
-  }
 }
