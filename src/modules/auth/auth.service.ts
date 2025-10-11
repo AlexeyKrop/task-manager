@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { getJwtConstants } from '../../common';
 import { UsersService } from '../users';
 import {
   SignUpResponseDto,
@@ -16,6 +15,7 @@ import {
   RefreshTokenResponseDto,
 } from './dto';
 import { RefreshTokensRepository } from './repositories';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +23,7 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly refreshTokensRepository: RefreshTokensRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
@@ -67,8 +68,10 @@ export class AuthService {
     const { refresh_token } = refreshTokenDto;
     let payload;
     try {
+      const refreshSecret =
+        this.configService.get<string>('JWT_REFRESH_SECRET');
       payload = await this.jwtService.verifyAsync(refresh_token, {
-        secret: getJwtConstants().refresh.secret,
+        secret: refreshSecret,
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -97,18 +100,30 @@ export class AuthService {
   ): Promise<SignUpResponseDto> {
     const payload = { sub: userId, email };
 
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const refreshExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
+
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
-        secret: getJwtConstants().refresh.secret,
-        expiresIn: getJwtConstants().refresh.expiresIn,
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
       }),
     ]);
 
     const expiresAt = new Date();
-    const daysMatch = getJwtConstants().refresh.expiresIn.match(/(\d+)d/);
+    const daysMatch = refreshExpiresIn?.match(/(\d+)d/);
     if (daysMatch) {
       expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
+    } else {
+      const hoursMatch = refreshExpiresIn?.match(/(\d+)h/);
+      if (hoursMatch) {
+        expiresAt.setHours(expiresAt.getHours() + parseInt(hoursMatch[1]));
+      } else {
+        expiresAt.setDate(expiresAt.getDate() + 7);
+      }
     }
 
     await this.refreshTokensRepository.create({
