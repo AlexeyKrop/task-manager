@@ -1,10 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserProfileResponseDto {
-  @ApiProperty({ example: 'uuid-123' })
+  @ApiProperty()
   id: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty()
   email: string;
 
   @ApiProperty()
@@ -12,4 +12,19 @@ export class UserProfileResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiPropertyOptional()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  bio?: string;
+
+  @ApiPropertyOptional()
+  avatarUrl?: string;
 }

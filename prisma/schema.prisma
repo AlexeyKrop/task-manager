@@ -11,13 +11,11 @@ datasource db {
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
-  name          String?
-  avatarUrl     String?        @map("avatar_url")
-  bio           String?
   createdAt     DateTime       @default(now()) @map("created_at")
   emailVerified Boolean        @default(false) @map("email_verified")
   passwordHash  String         @map("password_hash")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  profile       UserProfile?
   RefreshToken  RefreshToken[]
 
   @@map("users")
@@ -32,4 +30,18 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model UserProfile {
+  id        String  @id @default(uuid())
+  userId    String  @unique @map("user_id")
+  firstName String? @map("first_name")
+  lastName  String? @map("last_name")
+  phone     String?
+  bio       String? @db.Text
+  avatarUrl String? @map("avatar_url")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
 }

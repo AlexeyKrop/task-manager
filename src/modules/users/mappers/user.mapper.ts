@@ -1,5 +1,5 @@
 import { User as PrismaUser } from '@prisma/client';
-import { User } from '../domain';
+import { User, UserProfile } from '../domain';
 import { UserProfileResponseDto } from '../dto';
 
 export class UserMapper {
@@ -17,12 +17,21 @@ export class UserMapper {
     return prismaUsers.map((user) => this.toDomain(user));
   }
 
-  static toResponse(user: User): UserProfileResponseDto {
+  static toResponse(
+    user: User,
+    profile?: UserProfile | null,
+  ): UserProfileResponseDto {
     return {
       id: user.id,
       email: user.email,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+
+      firstName: profile?.firstName ?? undefined,
+      lastName: profile?.lastName ?? undefined,
+      phone: profile?.phone ?? undefined,
+      bio: profile?.bio ?? undefined,
+      avatarUrl: profile?.avatarUrl ?? undefined,
     };
   }
 }

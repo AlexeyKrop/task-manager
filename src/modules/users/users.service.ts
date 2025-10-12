@@ -3,14 +3,17 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { UsersRepository } from './repositories';
+import { UserProfileRepository, UsersRepository } from './repositories';
 import { User } from './domain';
 import { UserMapper } from './mappers';
-import { UserProfileResponseDto } from './dto';
+import { UpdateProfileDto, UserProfileResponseDto } from './dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly profileRepository: UserProfileRepository,
+  ) {}
 
   async create({
     email,
@@ -43,6 +46,22 @@ export class UsersService {
 
   async getProfile(id: string): Promise<UserProfileResponseDto> {
     const user = await this.findById(id);
-    return UserMapper.toResponse(user);
+    const profile = await this.profileRepository.findByUserId(id);
+
+    return UserMapper.toResponse(user, profile);
+  }
+
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<UserProfileResponseDto> {
+    const user = await this.findById(userId);
+
+    const profile = await this.profileRepository.upsert(
+      userId,
+      updateProfileDto,
+    );
+
+    return UserMapper.toResponse(user, profile);
   }
 }
