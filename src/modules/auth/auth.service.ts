@@ -1,11 +1,8 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users';
+import { JwtConfigService } from '../../common';
 import {
   SignUpResponseDto,
   SignUpDto,
@@ -13,9 +10,9 @@ import {
   SignInDto,
   RefreshTokenDto,
   RefreshTokenResponseDto,
+  LogoutDto,
 } from './dto';
 import { RefreshTokensRepository } from './repositories';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +20,7 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly refreshTokensRepository: RefreshTokensRepository,
-    private readonly configService: ConfigService,
+    private readonly jwtConfigService: JwtConfigService,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
@@ -63,10 +60,8 @@ export class AuthService {
     const { refresh_token } = refreshTokenDto;
     let payload;
     try {
-      const refreshSecret =
-        this.configService.get<string>('JWT_REFRESH_SECRET');
       payload = await this.jwtService.verifyAsync(refresh_token, {
-        secret: refreshSecret,
+        secret: this.jwtConfigService.refreshSecret,
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -89,48 +84,38 @@ export class AuthService {
     return this.generateTokens(payload.sub, payload.email);
   }
 
+  async logout(logoutDto: LogoutDto): Promise<void> {
+    const { refresh_token } = logoutDto;
+
+    const tokenInDb =
+      await this.refreshTokensRepository.findByToken(refresh_token);
+
+    if (!tokenInDb) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    await this.refreshTokensRepository.deleteByToken(refresh_token);
+  }
+
+  async logoutAll(userId: string): Promise<void> {
+    await this.refreshTokensRepository.deleteAllByUserId(userId);
+  }
+
   private async generateTokens(
     userId: string,
     email: string,
   ): Promise<SignUpResponseDto> {
     const payload = { sub: userId, email };
 
-    const jwtSecret = this.configService.get<string>('JWT_SECRET');
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    const refreshExpiresIn = this.configService.get<string>(
-      'JWT_REFRESH_EXPIRES_IN',
-    );
-
-    if (!jwtSecret) {
-      throw new InternalServerErrorException('JWT_SECRET configuration error');
-    }
-
-    if (!refreshSecret) {
-      throw new InternalServerErrorException(
-        'JWT_REFRESH_SECRET configuration error',
-      );
-    }
-
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
-        secret: refreshSecret,
-        expiresIn: refreshExpiresIn,
+        secret: this.jwtConfigService.refreshSecret,
+        expiresIn: this.jwtConfigService.refreshExpiresIn,
       }),
     ]);
 
-    const expiresAt = new Date();
-    const daysMatch = refreshExpiresIn?.match(/(\d+)d/);
-    if (daysMatch) {
-      expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
-    } else {
-      const hoursMatch = refreshExpiresIn?.match(/(\d+)h/);
-      if (hoursMatch) {
-        expiresAt.setHours(expiresAt.getHours() + parseInt(hoursMatch[1]));
-      } else {
-        expiresAt.setDate(expiresAt.getDate() + 7);
-      }
-    }
+    const expiresAt = this.jwtConfigService.calculateExpiresAt();
 
     await this.refreshTokensRepository.create({
       token: refreshToken,

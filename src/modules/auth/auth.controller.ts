@@ -1,6 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from '../../common';
+import { CurrentUser } from '../users/decorators';
 import { AuthService } from './auth.service';
 import {
+  LogoutDto,
   RefreshTokenDto,
   RefreshTokenResponseDto,
   SignInDto,
@@ -13,20 +17,35 @@ import {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post('signUp')
-  signUp(@Body() signUpDto: SignUpDto): Promise<SignUpResponseDto> {
+  async signUp(@Body() signUpDto: SignUpDto): Promise<SignUpResponseDto> {
     return this.authService.signUp(signUpDto);
   }
 
+  @Public()
   @Post('signIn')
-  signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
+  async signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
     return this.authService.signIn(signInDto);
   }
 
+  @Public()
   @Post('refresh')
-  refresh(
+  async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<RefreshTokenResponseDto> {
     return this.authService.refresh(refreshTokenDto);
+  }
+  @Public()
+  @Post('logout')
+  async logout(@Body() logoutDto: LogoutDto) {
+    this.authService.logout(logoutDto);
+    return { message: 'Logged out successfully' };
+  }
+
+  @Post('logout-all')
+  @ApiBearerAuth()
+  async logoutAll(@CurrentUser() userId: string) {
+    await this.authService.logoutAll(userId);
   }
 }

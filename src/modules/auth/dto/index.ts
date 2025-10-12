@@ -4,3 +4,4 @@ export { RefreshTokenDto } from './refresh-token.dto';
 export { SignUpResponseDto } from './sign-up-response.dto';
 export { SignInResponseDto } from './sign-in-response.dto';
 export { RefreshTokenResponseDto } from './refresh-token-response.dto';
+export { LogoutDto } from './logout.dto';
