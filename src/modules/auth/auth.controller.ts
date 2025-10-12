@@ -29,23 +29,23 @@ export class AuthController {
     return this.authService.signIn(signInDto);
   }
 
-  @Public()
   @Post('refresh')
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<RefreshTokenResponseDto> {
     return this.authService.refresh(refreshTokenDto);
   }
-  @Public()
+
   @Post('logout')
-  async logout(@Body() logoutDto: LogoutDto) {
-    this.authService.logout(logoutDto);
-    return { message: 'Logged out successfully' };
+  @ApiBearerAuth()
+  async logout(@Body() logoutDto: LogoutDto, @CurrentUser() userId: string) {
+    this.authService.logout(logoutDto, userId);
   }
 
   @Post('logout-all')
   @ApiBearerAuth()
   async logoutAll(@CurrentUser() userId: string) {
     await this.authService.logoutAll(userId);
+    return { message: 'Logged out from all devices' };
   }
 }

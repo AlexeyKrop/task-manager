@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users';
@@ -84,7 +88,7 @@ export class AuthService {
     return this.generateTokens(payload.sub, payload.email);
   }
 
-  async logout(logoutDto: LogoutDto): Promise<void> {
+  async logout(logoutDto: LogoutDto, userId: string): Promise<void> {
     const { refresh_token } = logoutDto;
 
     const tokenInDb =
@@ -92,6 +96,10 @@ export class AuthService {
 
     if (!tokenInDb) {
       throw new UnauthorizedException('Refresh token not found');
+    }
+
+    if (tokenInDb.userId !== userId) {
+      throw new ForbiddenException('Cannot logout with another user token');
     }
 
     await this.refreshTokensRepository.deleteByToken(refresh_token);
