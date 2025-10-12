@@ -2,10 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  Logger,
-  InternalServerErrorException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { UsersRepository } from './repositories';
 import { User } from './domain';
 import { UserMapper } from './mappers';
@@ -13,8 +10,6 @@ import { UserProfileResponseDto } from './dto';
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
-
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async create({
@@ -24,30 +19,12 @@ export class UsersService {
     email: string;
     passwordHash: string;
   }): Promise<User> {
-    try {
-      this.logger.log(`Attempting to create user with email: ${email}`);
-
-      this.logger.log(`Checking if user already exists`);
-      const existingUser = await this.usersRepository.findByEmail(email);
-      if (existingUser) {
-        this.logger.warn(`User with email ${email} already exists`);
-        throw new ConflictException('User with this email already exists');
-      }
-
-      this.logger.log(`Creating new user in database`);
-      const user = await this.usersRepository.create(email, passwordHash);
-      this.logger.log(`User created successfully with ID: ${user.id}`);
-
-      return user;
-    } catch (error) {
-      this.logger.error(`Failed to create user with email ${email}:`, error.stack);
-
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException('Failed to create user in database');
+    const existingUser = await this.usersRepository.findByEmail(email);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
     }
+
+    return this.usersRepository.create(email, passwordHash);
   }
 
   async findByEmail(email: string): Promise<User | null> {

@@ -1,8 +1,6 @@
 import {
-  ConflictException,
   Injectable,
   UnauthorizedException,
-  Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -21,8 +19,6 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private jwtService: JwtService,
     private readonly usersService: UsersService,
@@ -31,68 +27,34 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
-    try {
-      const { email, password } = signUpDto;
+    const { email, password } = signUpDto;
 
-      this.logger.log(`Attempting to sign up user with email: ${email}`);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.usersService.create({
+      email: email,
+      passwordHash: hashedPassword,
+    });
 
-      const user = await this.usersService.create({
-        email: email,
-        passwordHash: hashedPassword,
-      });
-
-      this.logger.log(`User created successfully with ID: ${user.id}`);
-      return this.generateTokens(user.id, user.email);
-    } catch (error) {
-      this.logger.error(
-        `Sign up failed for email ${signUpDto.email}:`,
-        error.stack,
-      );
-
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException('Failed to create user account');
-    }
+    return this.generateTokens(user.id, user.email);
   }
 
   async signIn(signInDto: SignInDto): Promise<SignInResponseDto> {
-    try {
-      const { email, password } = signInDto;
+    const { email, password } = signInDto;
 
-      this.logger.log(`Attempting to sign in user with email: ${email}`);
+    const user = await this.usersService.findByEmail(email);
 
-      const user = await this.usersService.findByEmail(email);
-
-      if (!user) {
-        this.logger.warn(`Sign in failed: User with email ${email} not found`);
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-
-      if (!passwordsMatch) {
-        this.logger.warn(`Sign in failed: Invalid password for email ${email}`);
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      this.logger.log(`User signed in successfully with ID: ${user.id}`);
-      return this.generateTokens(user.id, user.email);
-    } catch (error) {
-      this.logger.error(
-        `Sign in failed for email ${signInDto.email}:`,
-        error.stack,
-      );
-
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException('Failed to sign in user');
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
+
+    const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!passwordsMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return this.generateTokens(user.id, user.email);
   }
 
   async refresh(
@@ -131,91 +93,54 @@ export class AuthService {
     userId: string,
     email: string,
   ): Promise<SignUpResponseDto> {
-    try {
-      this.logger.log(`Starting token generation for user ${userId}`);
+    const payload = { sub: userId, email };
 
-      const payload = { sub: userId, email };
-      this.logger.log(`JWT payload created: ${JSON.stringify(payload)}`);
-      const jwtSecret = this.configService.get<string>('JWT_SECRET');
-      const refreshSecret =
-        this.configService.get<string>('JWT_REFRESH_SECRET');
-      const refreshExpiresIn = this.configService.get<string>(
-        'JWT_REFRESH_EXPIRES_IN',
-      );
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const refreshExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
 
-      this.logger.log(`JWT_SECRET exists: ${!!jwtSecret}`);
-      this.logger.log(`JWT_SECRET length: ${jwtSecret?.length || 0}`);
-      this.logger.log(`JWT_REFRESH_SECRET exists: ${!!refreshSecret}`);
-      this.logger.log(`JWT_REFRESH_SECRET length: ${refreshSecret?.length || 0}`);
-      this.logger.log(`JWT_REFRESH_EXPIRES_IN: "${refreshExpiresIn}"`);
-      this.logger.log(`JWT_REFRESH_EXPIRES_IN type: ${typeof refreshExpiresIn}`);
+    if (!jwtSecret) {
+      throw new InternalServerErrorException('JWT_SECRET configuration error');
+    }
 
-      if (!jwtSecret) {
-        this.logger.error('JWT_SECRET is not configured');
-        throw new InternalServerErrorException(
-          'JWT_SECRET configuration error',
-        );
-      }
-
-      if (!refreshSecret) {
-        this.logger.error('JWT_REFRESH_SECRET is not configured');
-        throw new InternalServerErrorException(
-          'JWT_REFRESH_SECRET configuration error',
-        );
-      }
-
-      this.logger.log(`Generating access token for user ${userId}`);
-      const accessToken = await this.jwtService.signAsync(payload);
-      this.logger.log(`Access token generated successfully`);
-
-      this.logger.log(`Generating refresh token for user ${userId}`);
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: refreshSecret,
-        expiresIn: refreshExpiresIn,
-      });
-      this.logger.log(`Refresh token generated successfully`);
-
-      const expiresAt = new Date();
-      const daysMatch = refreshExpiresIn?.match(/(\d+)d/);
-      if (daysMatch) {
-        expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
-      } else {
-        const hoursMatch = refreshExpiresIn?.match(/(\d+)h/);
-        if (hoursMatch) {
-          expiresAt.setHours(expiresAt.getHours() + parseInt(hoursMatch[1]));
-        } else {
-          expiresAt.setDate(expiresAt.getDate() + 7);
-        }
-      }
-
-      this.logger.log(`Creating refresh token in database for user ${userId}`);
-      await this.refreshTokensRepository.create({
-        token: refreshToken,
-        userId,
-        expiresAt,
-      });
-      this.logger.log(`Refresh token saved to database successfully`);
-
-      this.logger.log(
-        `Token generation completed successfully for user ${userId}`,
-      );
-      return {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      };
-    } catch (error) {
-      this.logger.error(`CRITICAL ERROR in generateTokens for user ${userId}:`);
-      this.logger.error(`Error message: ${error.message}`);
-      this.logger.error(`Error stack: ${error.stack}`);
-      this.logger.error(`Error name: ${error.name}`);
-
-      if (error.message?.includes('JWT')) {
-        this.logger.error('This appears to be a JWT configuration issue');
-      }
-
+    if (!refreshSecret) {
       throw new InternalServerErrorException(
-        'Failed to generate authentication tokens',
+        'JWT_REFRESH_SECRET configuration error',
       );
     }
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
+      }),
+    ]);
+
+    const expiresAt = new Date();
+    const daysMatch = refreshExpiresIn?.match(/(\d+)d/);
+    if (daysMatch) {
+      expiresAt.setDate(expiresAt.getDate() + parseInt(daysMatch[1]));
+    } else {
+      const hoursMatch = refreshExpiresIn?.match(/(\d+)h/);
+      if (hoursMatch) {
+        expiresAt.setHours(expiresAt.getHours() + parseInt(hoursMatch[1]));
+      } else {
+        expiresAt.setDate(expiresAt.getDate() + 7);
+      }
+    }
+
+    await this.refreshTokensRepository.create({
+      token: refreshToken,
+      userId,
+      expiresAt,
+    });
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
   }
 }
