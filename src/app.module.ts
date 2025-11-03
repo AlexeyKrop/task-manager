@@ -8,7 +8,7 @@ import {
   JwtConfigService,
   PrismaModule,
 } from './common';
-import { AuthModule, UsersModule } from './modules';
+import { AuthModule, UsersModule, TasksModule } from './modules';
 
 @Module({
   imports: [
@@ -33,6 +33,7 @@ import { AuthModule, UsersModule } from './modules';
 
     AuthModule,
     UsersModule,
+    TasksModule,
   ],
   providers: [
     {

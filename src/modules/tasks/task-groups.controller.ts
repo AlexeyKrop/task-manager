@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import {ApiBearerAuth} from '@nestjs/swagger';
 import {CurrentUser} from '../../common/decorators';
 import { TaskGroupsService } from './task-groups.service';
-import { CreateTaskGroupDto } from './dto';
+import { CreateTaskGroupDto, TaskGroupResponseDto } from './dto';
 
 
 @Controller('task-groups')
@@ -14,17 +14,17 @@ export class TaskGroupsController {
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateTaskGroupDto,
-  ) {
+  ): Promise<TaskGroupResponseDto> {
     return this.taskGroupsService.create(userId, dto);
   }
 
   @Get()
-  async findMy(@CurrentUser('id') userId: string) {
+  async findMy(@CurrentUser('id') userId: string): Promise<TaskGroupResponseDto[]> {
     return this.taskGroupsService.findByUserId(userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<TaskGroupResponseDto> {
     return this.taskGroupsService.findById(id);
   }
 }

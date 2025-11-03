@@ -7,9 +7,9 @@ export class TaskGroup {
         public readonly name: string,
         public readonly position: number,
         public readonly userId: string,
-        public readonly owner: TaskAuthor,
         public readonly createdAt: Date,
         public readonly updatedAt: Date,
+        public readonly owner?: TaskAuthor,
     ) { }
 
     canBeEditedBy(userId: string): boolean {

@@ -11,11 +11,11 @@ import { UsersService } from './users.service';
 import { UpdateProfileDto, UserProfileResponseDto } from './dto';
 
 @Controller('users')
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  @ApiBearerAuth()
   async getMyProfile(
     @CurrentUser() userId: string,
   ): Promise<UserProfileResponseDto> {
@@ -23,7 +23,6 @@ export class UsersController {
   }
 
   @Patch('me')
-  @ApiBearerAuth()
   async updateMyProfile(
     @CurrentUser() userId: string,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -32,7 +31,6 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiBearerAuth()
   async getUserProfile(
     @Param('id') id: string,
   ): Promise<UserProfileResponseDto> {
@@ -40,7 +38,6 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiBearerAuth()
   async updateUserProfile(
     @Param('id') id: string,
     @Body() updateProfileDto: UpdateProfileDto,
