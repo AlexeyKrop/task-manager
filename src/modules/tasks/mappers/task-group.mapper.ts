@@ -38,12 +38,11 @@ export class TaskGroupMapper {
             id: group.id,
             name: group.name,
             position: group.position,
-            userId: group.userId,
+            ownerId: group.ownerId,
             createdAt: group.createdAt,
             updatedAt: group.updatedAt,
             owner: group.owner
                 ? {
-                    id: group.owner.id,
                     firstName: group.owner.firstName,
                     lastName: group.owner.lastName,
                     fullName: group.owner.getFullName(),
@@ -55,7 +54,6 @@ export class TaskGroupMapper {
 
     private static mapOwner(user: PrismaGroupWithRelations['user']): TaskAuthor {
         return new TaskAuthor(
-            user.id,
             user.profile?.firstName || '',
             user.profile?.lastName || '',
             user.profile?.avatarUrl || undefined,

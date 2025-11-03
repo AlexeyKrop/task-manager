@@ -6,14 +6,14 @@ export class TaskGroup {
         public readonly id: string,
         public readonly name: string,
         public readonly position: number,
-        public readonly userId: string,
+        public readonly ownerId: string,
         public readonly createdAt: Date,
         public readonly updatedAt: Date,
         public readonly owner?: TaskAuthor,
     ) { }
 
     canBeEditedBy(userId: string): boolean {
-        return this.userId === userId;
+        return this.ownerId === userId;
     }
     ensureCanBeEditedBy(userId: string): void {
         if (!this.canBeEditedBy(userId)) {

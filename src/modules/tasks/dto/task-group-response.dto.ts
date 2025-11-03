@@ -2,9 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class TaskGroupOwnerDto {
   @ApiProperty()
-  id: string;
-
-  @ApiProperty()
   firstName: string;
 
   @ApiProperty()
@@ -28,7 +25,7 @@ export class TaskGroupResponseDto {
   position: number;
 
   @ApiProperty()
-  userId: string;
+  ownerId: string;
 
   @ApiProperty()
   createdAt: Date;
