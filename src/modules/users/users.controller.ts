@@ -2,14 +2,12 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Patch,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import {CurrentUser} from '../../common';
 import { UsersService } from './users.service';
-import { CurrentUser } from './decorators';
 import { UpdateProfileDto, UserProfileResponseDto } from './dto';
 
 @Controller('users')

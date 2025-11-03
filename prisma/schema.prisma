@@ -17,6 +17,9 @@ model User {
   updatedAt     DateTime       @updatedAt @map("updated_at")
   profile       UserProfile?
   RefreshToken  RefreshToken[]
+  groups        Group[]
+  tasks         Task[] @relation("OwnedTasks")
+  comments      Comment[]
 
   @@map("users")
 }
@@ -44,4 +47,85 @@ model UserProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text
+  isCompleted Boolean  @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+  priority    String
+  position    Int
+  tags        String[] @default([])
+
+  ownerId     String   @map("owner_id")
+  owner       User     @relation("OwnedTasks", fields: [ownerId], references: [id])
+
+  groupId     String   @map("group_id")
+  group       Group    @relation(fields: [groupId], references: [id])
+
+  parentId    String?  @map("parent_id")
+  parent      Task?    @relation("SubTasks", fields: [parentId], references: [id])
+  children    Task[]   @relation("SubTasks")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([groupId])
+  @@index([parentId])
+  @@index([isCompleted])
+  @@index([priority])
+
+  @@map("tasks")
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  @@index([userId])
+  @@index([position])
+  @@map("groups")
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  url        String
+  fileName   String   @map("file_name")
+  fileSize   Int?     @map("file_size")
+  mimeType   String?  @map("mime_type")
+
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("attachments")
 }
