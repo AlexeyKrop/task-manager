@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Public } from '../../common';
-import { CurrentUser } from '../users/decorators';
+import { CurrentUser, Public } from '../../common';
 import { AuthService } from './auth.service';
 import {
   LogoutDto,
