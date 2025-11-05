@@ -31,4 +31,23 @@ export class TaskGroupsService {
     const groups = await this.taskGroupsRepository.findByUserId(userId);
     return groups.map(group => TaskGroupMapper.toResponse(group));
   }
+
+  async deleteTaskGroup(groupId: string, force: boolean): Promise<void> {
+    const group = await this.taskGroupsRepository.findById(groupId);
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    const taskCount = await this.taskGroupsRepository.countTasksInGroup(groupId);
+
+
+    group.ensureCanBeDeleted(taskCount, force);
+
+    if (force && taskCount > 0) {
+        await this.taskGroupsRepository.deleteWithTasks(groupId);
+      } else {
+        await this.taskGroupsRepository.deleteEmpty(groupId);
+      }
+  }
 }

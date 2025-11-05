@@ -12,8 +12,10 @@ type PrismaGroupWithRelations = Prisma.GroupGetPayload<{
     };
 }>;
 
+type PrismaGroupBasic = Prisma.GroupGetPayload<{}>;
+
 export class TaskGroupMapper {
-    static toDomain(prismaGroup: PrismaGroupWithRelations): TaskGroup {
+    static toDomain(prismaGroup: PrismaGroupWithRelations | PrismaGroupBasic): TaskGroup {
         return new TaskGroup(
             prismaGroup.id,
             prismaGroup.name,

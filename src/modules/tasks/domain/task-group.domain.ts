@@ -1,4 +1,4 @@
-import {ForbiddenException} from "@nestjs/common";
+import {BadRequestException, ForbiddenException} from "@nestjs/common";
 import {TaskAuthor} from "./task-author.vo";
 
 export class TaskGroup {
@@ -15,9 +15,23 @@ export class TaskGroup {
     canBeEditedBy(userId: string): boolean {
         return this.ownerId === userId;
     }
+
     ensureCanBeEditedBy(userId: string): void {
         if (!this.canBeEditedBy(userId)) {
-          throw new ForbiddenException('Only group owner can edit this group');
+            throw new ForbiddenException('Only group owner can edit this group');
         }
-      }
+    }
+
+    canBeDeleted(taskCount: number, force: boolean): boolean {
+        return taskCount === 0 || force;
+    }
+
+    ensureCanBeDeleted(taskCount: number, force: boolean): void {
+        if (!this.canBeDeleted(taskCount, force)) {
+            throw new BadRequestException(
+                `Cannot delete group "${this.name}" with ${taskCount} task(s). Use force=true to delete all tasks.`
+            );
+        }
+    }
+
 }

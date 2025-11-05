@@ -11,7 +11,6 @@ import {TaskGroupsRepository} from './repositories';
     ],
     providers: [
         TaskGroupsService,
-
         TaskGroupsRepository,
     ],
     exports: [

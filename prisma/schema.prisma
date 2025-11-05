@@ -63,7 +63,7 @@ model Task {
   owner       User     @relation("OwnedTasks", fields: [ownerId], references: [id])
 
   groupId     String   @map("group_id")
-  group       Group    @relation(fields: [groupId], references: [id])
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   parentId    String?  @map("parent_id")
   parent      Task?    @relation("SubTasks", fields: [parentId], references: [id])

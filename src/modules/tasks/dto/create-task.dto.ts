@@ -9,9 +9,6 @@ export class CreateTaskDto {
   description: string;
   @IsString()
   @IsOptional()
-  status: string;
-  @IsString()
-  @IsOptional()
   priority: string;
   @IsString()
   @IsNotEmpty()

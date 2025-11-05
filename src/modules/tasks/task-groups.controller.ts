@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import {ApiBearerAuth} from '@nestjs/swagger';
 import {CurrentUser} from '../../common/decorators';
 import { TaskGroupsService } from './task-groups.service';
@@ -26,5 +26,13 @@ export class TaskGroupsController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<TaskGroupResponseDto> {
     return this.taskGroupsService.findById(id);
+  }
+
+  @Delete(':id')
+  deleteTaskGroup(
+    @Param('id') id: string,
+    @Query('force') force?: string,
+  ) {
+    return this.taskGroupsService.deleteTaskGroup(id, force === 'true');
   }
 }
