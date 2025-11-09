@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { CurrentUser, Public } from '../../common';
+import { CookieService, CurrentUser, Public } from '../../common';
 import { AuthService } from './auth.service';
 import {
   RefreshTokenResponseDto,
@@ -13,7 +13,10 @@ import {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private cookieService: CookieService
+) {}
 
   @Public()
   @Post('signUp')
@@ -23,7 +26,7 @@ export class AuthController {
   ): Promise<SignUpResponseDto> {
     const result = await this.authService.signUp(signUpDto);
 
-    this.setRefreshTokenCookie(response, result.refresh_token);
+    this.cookieService.setRefreshToken(response, result.refresh_token);
 
     return { access_token: result.access_token };
   }
@@ -36,7 +39,7 @@ export class AuthController {
   ): Promise<SignInResponseDto> {
     const result = await this.authService.signIn(signInDto);
 
-    this.setRefreshTokenCookie(response, result.refresh_token);
+    this.cookieService.setRefreshToken(response, result.refresh_token);
 
     return { access_token: result.access_token };
   }
@@ -48,7 +51,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<RefreshTokenResponseDto> {
-    const refreshToken = request.cookies?.['refreshToken'];
+    const refreshToken = this.cookieService.getRefreshToken(request);
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
@@ -56,7 +59,7 @@ export class AuthController {
 
     const result = await this.authService.refresh(refreshToken);
 
-    this.setRefreshTokenCookie(response, result.refresh_token);
+    this.cookieService.setRefreshToken(response, result.refresh_token);
 
     return { access_token: result.access_token };
   }
@@ -68,13 +71,13 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @CurrentUser() userId: string,
   ) {
-    const refreshToken = request.cookies?.['refreshToken'];
+    const refreshToken = this.cookieService.getRefreshToken(request);
 
     if (refreshToken) {
       await this.authService.logout(refreshToken, userId);
     }
 
-    this.clearRefreshTokenCookie(response);
+    this.cookieService.clearRefreshToken(response);
 
     return { message: 'Logged out successfully' };
   }
@@ -86,32 +89,9 @@ export class AuthController {
     @CurrentUser() userId: string,
   ) {
     await this.authService.logoutAll(userId);
-    this.clearRefreshTokenCookie(response);
+    this.cookieService.clearRefreshToken(response);
 
     return { message: 'Logged out from all devices' };
-  }
-
-  private setRefreshTokenCookie(response: Response, refreshToken: string) {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    response.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: isProduction, // true только в production
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
-      path: '/api/auth', // кука доступна только для auth endpoints
-    });
-  }
-
-  private clearRefreshTokenCookie(response: Response) {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    response.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'strict',
-      path: '/api/auth',
-    });
   }
 
 }

@@ -12,19 +12,21 @@ export class TaskGroupsController {
 
   @Post()
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() userId: string,
     @Body() dto: CreateTaskGroupDto,
   ): Promise<TaskGroupResponseDto> {
     return this.taskGroupsService.create(userId, dto);
   }
 
   @Get()
-  async findMy(@CurrentUser('id') userId: string): Promise<TaskGroupResponseDto[]> {
+  async findMy(@CurrentUser() userId: string): Promise<TaskGroupResponseDto[]> {
     return this.taskGroupsService.findByUserId(userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<TaskGroupResponseDto> {
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<TaskGroupResponseDto> {
     return this.taskGroupsService.findById(id);
   }
 

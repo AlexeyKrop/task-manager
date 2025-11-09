@@ -6,6 +6,9 @@ export class CreateTaskGroupDto {
     @IsString()
     @IsNotEmpty()
     name: string;
+    @IsString()
+    @IsNotEmpty()
+    userId: string;
 
     @ApiProperty({
         description: 'Position tasks group in list',

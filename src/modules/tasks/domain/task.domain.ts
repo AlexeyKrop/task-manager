@@ -4,8 +4,6 @@ import {TaskAttachment} from "./task-attachment.vo";
 import {TaskGroup} from "./task-group.domain";
 
 export class Task {
-    private _status: string;
-    private readonly _children: Task[];
     constructor(
         public readonly id: string,
         public readonly title: string,

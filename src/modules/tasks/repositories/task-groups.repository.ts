@@ -83,5 +83,27 @@ export class TaskGroupsRepository {
           where: {groupId}
         });
       }
+
+      async delete(groupId: string, options: {
+        force?: boolean;
+      } = {}): Promise<void> {
+        const { force = false } = options;
+
+        if (force) {
+            await this.prisma.$transaction(async (tx) => {
+                await tx.task.deleteMany({
+                    where: { groupId }
+                });
+                await tx.group.delete({
+                    where: { id: groupId }
+                });
+            });
+        } else {
+
+            await this.prisma.group.delete({
+                where: { id: groupId }
+            });
+        }
+    }
 }
 

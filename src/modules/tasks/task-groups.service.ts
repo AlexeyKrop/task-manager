@@ -44,10 +44,6 @@ export class TaskGroupsService {
 
     group.ensureCanBeDeleted(taskCount, force);
 
-    if (force && taskCount > 0) {
-        await this.taskGroupsRepository.deleteWithTasks(groupId);
-      } else {
-        await this.taskGroupsRepository.deleteEmpty(groupId);
-      }
+    await this.taskGroupsRepository.delete(groupId, { force: force })
   }
 }
