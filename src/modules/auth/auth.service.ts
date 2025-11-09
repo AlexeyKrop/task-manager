@@ -8,15 +8,15 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users';
 import { JwtConfigService } from '../../common';
 import {
-  SignUpResponseDto,
   SignUpDto,
-  SignInResponseDto,
   SignInDto,
-  RefreshTokenDto,
-  RefreshTokenResponseDto,
-  LogoutDto,
 } from './dto';
 import { RefreshTokensRepository } from './repositories';
+
+interface TokenPair {
+    access_token: string;
+    refresh_token: string;
+  }
 
 @Injectable()
 export class AuthService {
@@ -27,7 +27,7 @@ export class AuthService {
     private readonly jwtConfigService: JwtConfigService,
   ) {}
 
-  async signUp(signUpDto: SignUpDto): Promise<SignUpResponseDto> {
+  async signUp(signUpDto: SignUpDto): Promise<TokenPair> {
     const { email, password } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,7 +40,7 @@ export class AuthService {
     return this.generateTokens(user.id, user.email);
   }
 
-  async signIn(signInDto: SignInDto): Promise<SignInResponseDto> {
+  async signIn(signInDto: SignInDto): Promise<TokenPair> {
     const { email, password } = signInDto;
 
     const user = await this.usersService.findByEmail(email);
@@ -58,13 +58,10 @@ export class AuthService {
     return this.generateTokens(user.id, user.email);
   }
 
-  async refresh(
-    refreshTokenDto: RefreshTokenDto,
-  ): Promise<RefreshTokenResponseDto> {
-    const { refresh_token } = refreshTokenDto;
+  async refresh(refreshToken: string): Promise<TokenPair> {
     let payload;
     try {
-      payload = await this.jwtService.verifyAsync(refresh_token, {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.jwtConfigService.refreshSecret,
       });
     } catch {
@@ -72,37 +69,35 @@ export class AuthService {
     }
 
     const tokenInDb =
-      await this.refreshTokensRepository.findByToken(refresh_token);
+      await this.refreshTokensRepository.findByToken(refreshToken);
 
     if (!tokenInDb) {
       throw new UnauthorizedException('Refresh token not found');
     }
 
     if (tokenInDb.isExpired()) {
-      await this.refreshTokensRepository.deleteByToken(refresh_token);
+      await this.refreshTokensRepository.deleteByToken(refreshToken);
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    await this.refreshTokensRepository.deleteByToken(refresh_token);
+    await this.refreshTokensRepository.deleteByToken(refreshToken);
 
     return this.generateTokens(payload.sub, payload.email);
   }
 
-  async logout(logoutDto: LogoutDto, userId: string): Promise<void> {
-    const { refresh_token } = logoutDto;
-
+  async logout(refreshToken: string, userId: string): Promise<void> {
     const tokenInDb =
-      await this.refreshTokensRepository.findByToken(refresh_token);
+      await this.refreshTokensRepository.findByToken(refreshToken);
 
     if (!tokenInDb) {
-      throw new UnauthorizedException('Refresh token not found');
+      return;
     }
 
     if (tokenInDb.userId !== userId) {
       throw new ForbiddenException('Cannot logout with another user token');
     }
 
-    await this.refreshTokensRepository.deleteByToken(refresh_token);
+    await this.refreshTokensRepository.deleteByToken(refreshToken);
   }
 
   async logoutAll(userId: string): Promise<void> {
@@ -112,7 +107,7 @@ export class AuthService {
   private async generateTokens(
     userId: string,
     email: string,
-  ): Promise<SignUpResponseDto> {
+  ): Promise<TokenPair> {
     const payload = { sub: userId, email };
 
     const [accessToken, refreshToken] = await Promise.all([

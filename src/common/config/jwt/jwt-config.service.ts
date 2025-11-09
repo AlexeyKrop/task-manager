@@ -21,6 +21,24 @@ export class JwtConfigService {
     return this.configService.getOrThrow<string>('jwt.refreshExpiresIn');
   }
 
+  get cookiePath(): string {
+    return this.configService.getOrThrow<string>('jwt.cookie.path');
+  }
+
+  get cookieSameSite(): 'strict' | 'lax' | 'none' {
+    return this.configService.getOrThrow<'strict' | 'lax' | 'none'>(
+      'jwt.cookie.sameSite',
+    );
+  }
+
+  get cookieDomain(): string | undefined {
+    return this.configService.get<string>('jwt.cookie.domain');
+  }
+
+  get isProduction(): boolean {
+    return process.env.NODE_ENV === 'production';
+  }
+
   calculateExpiresAt(expiresIn: string = this.refreshExpiresIn): Date {
     const expiresAt = new Date();
 
@@ -42,8 +60,12 @@ export class JwtConfigService {
       return expiresAt;
     }
 
-    // Дефолт - 7 дней
     expiresAt.setDate(expiresAt.getDate() + 7);
     return expiresAt;
+  }
+
+  calculateMaxAge(expiresIn: string = this.refreshExpiresIn): number {
+    const expiresAt = this.calculateExpiresAt(expiresIn);
+    return expiresAt.getTime() - Date.now();
   }
 }
