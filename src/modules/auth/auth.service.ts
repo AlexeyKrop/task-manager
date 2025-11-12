@@ -6,7 +6,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users';
-import { JwtConfigService } from '../../common';
+import { AppConfigService, JwtConfigService, TokenService } from '../../common';
 import {
   SignUpDto,
   SignInDto,
@@ -25,6 +25,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly jwtConfigService: JwtConfigService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<TokenPair> {
@@ -61,9 +62,7 @@ export class AuthService {
   async refresh(refreshToken: string): Promise<TokenPair> {
     let payload;
     try {
-      payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.jwtConfigService.refreshSecret,
-      });
+      payload = await this.tokenService.verifyRefreshToken(refreshToken);
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }

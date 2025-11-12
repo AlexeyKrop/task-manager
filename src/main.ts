@@ -2,26 +2,25 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import {AppConfigService, JwtConfigService} from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService);
+  const appConfig = app.get(AppConfigService);
+  const jwtConfig = app.get(JwtConfigService);
 
-  const jwtSecret = configService.get<string>('JWT_SECRET');
-  const jwtRefreshSecret = configService.get<string>('JWT_REFRESH_SECRET');
+  const jwtSecret = jwtConfig.secret;
+  const jwtRefreshSecret = jwtConfig.refreshSecret;
 
   if (!jwtSecret || !jwtRefreshSecret) {
     throw new Error('JWT secrets are required but not configured');
   }
 
-  const isDevelopment = configService.get<string>('NODE_ENV') !== 'production';
-  const allowedOrigins = configService
-    .get<string>('ALLOWED_ORIGINS')
-    ?.split(',') || ['http://localhost:5173'];
+  const isDevelopment = !appConfig.isProduction
+  const allowedOrigins = appConfig.allowedOrigins
 
   if (isDevelopment) {
     app.enableCors({

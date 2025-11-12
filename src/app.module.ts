@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import {
   AuthGuard,
   JwtConfigModule,
-  JwtConfigService,
   PrismaModule,
+  CookieModule,
+  TokenModule,
 } from './common';
 import { AuthModule, UsersModule, TasksModule } from './modules';
 
@@ -17,17 +17,19 @@ import { AuthModule, UsersModule, TasksModule } from './modules';
       envFilePath: '.env',
       cache: true,
     }),
-    JwtModule.registerAsync({
-      global: true,
-      imports: [JwtConfigModule],
-      inject: [JwtConfigService],
-      useFactory: (jwtConfigService: JwtConfigService) => ({
-        secret: jwtConfigService.secret,
-        signOptions: {
-          expiresIn: jwtConfigService.accessExpiresIn,
-        },
-      }),
-    }),
+    // JwtModule.registerAsync({
+    //   global: true,
+    //   imports: [JwtConfigModule],
+    //   inject: [AppConfigService],
+    //   useFactory: (jwtConfigService: JwtConfigService) => ({
+    //     secret: jwtConfigService.secret,
+    //     signOptions: {
+    //       expiresIn: jwtConfigService.accessExpiresIn,
+    //     },
+    //   }),
+    // }),
+    TokenModule,
+    CookieModule,
     JwtConfigModule,
     PrismaModule,
 
